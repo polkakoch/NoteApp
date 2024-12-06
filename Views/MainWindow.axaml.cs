@@ -1,4 +1,3 @@
-using System;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 
@@ -11,10 +10,15 @@ namespace NoteApp.Views
             InitializeComponent();
         }
 
-        private void OnButtonClick(object? sender, RoutedEventArgs e)
+        
+        private void Button_OnClick(object? sender, RoutedEventArgs e)
         {
-            // Логика при нажатии кнопки
-            Console.WriteLine("Кнопка нажата!");
+            if (CreateNote.IsVisible)
+            {
+                Notes.IsVisible = true;
+                CreateNote.IsVisible = false;
+                NotePanel.IsVisible = true;
+            }
         }
     }
 }
