@@ -1,0 +1,13 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="NoteApp.Views.MainWindow"
+        Title="NoteApp"
+        Width="800"
+        Height="600"
+        Background="#D0C5AD">
+    <Canvas>
+        <TextBlock Width="150" Height="50" FontSize="14" Foreground="#53422E" Margin="50,300,0,0" Text="Ваш список пуст..."/>
+        <Rectangle Width="4" Height="500" Margin="150,0,0,0" Fill="#9C7A51" StrokeThickness="2" Canvas.Left="50" Canvas.Top="50"/>
+        <Button Width="250" Height="75" Background="#D9D9D9" Margin="400,275,0,0" Content="Создать" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+    </Canvas>
+</Window>
