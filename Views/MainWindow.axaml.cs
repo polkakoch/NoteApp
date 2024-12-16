@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Media;
@@ -10,35 +10,19 @@ namespace NoteApp.Views
 {
     public partial class MainWindow : Window
     {
-        private List<Note> _notes = new List<Note>(); 
-        private int _currentNoteIndex = -1;
+        private ObservableCollection<Note> _notes = new ObservableCollection<Note>();
         private const string NotesFolder = "Notes";
+        private int _currentNoteIndex = -1;
 
         public MainWindow()
         {
             InitializeComponent();
-
-           
             if (!Directory.Exists(NotesFolder))
             {
                 Directory.CreateDirectory(NotesFolder);
             }
-
-            
             LoadNotes();
-
-           
-            if (_notes.Count > 0)
-            {
-                _currentNoteIndex = 0;
-                ShowNotePanel(_currentNoteIndex);
-            }
-            else
-            {
-                
-                EmptyListText.IsVisible = true;
-                NotePanel.IsVisible = false;
-            }
+            UpdateNotesList();
         }
 
         private void Button_OnClick(object? sender, RoutedEventArgs e)
@@ -46,150 +30,97 @@ namespace NoteApp.Views
             CreateNewNote();
         }
 
-        private void CreateNote2_OnClick(object? sender, RoutedEventArgs e)
-        {
-            CreateNewNote();
-        }
-
         private void CreateNewNote()
         {
-            // Создаем новую заметку
-            var newNote = new Note
-            {
-                Text = "",
-                Title = $"Заметка {_notes.Count + 1}"
-            };
-
-            // Добавляем заметку в список
+            var newNote = new Note { Title = $"Заметка {_notes.Count + 1}", Text = $"Это заметка {_notes.Count + 1}" };
             _notes.Add(newNote);
+            UpdateNotesList();
+            ShowNotePanel(_notes.Count - 1);
 
-            // Создаем кнопку для новой заметки
-            var newNoteButton = new Button
+            // P.S тут баг при повторном заходе не прячется кнопка
+            var createNoteButton = this.FindControl<Button>("CreateNote");
+            createNoteButton.IsVisible = false;
+        }
+
+        private void UpdateNotesList()
+        {
+            var notesList = this.FindControl<StackPanel>("NotesPanel");
+            notesList.Children.Clear();
+            foreach (var note in _notes)
             {
-                Width = 130,
-                Height = 40,
-                Content = newNote.Title,
-                Background = new SolidColorBrush(Color.Parse("#D9D9D9")),
-                Foreground = new SolidColorBrush(Color.Parse("#53422E")),
-                Margin = new Thickness(10)
-            };
-            newNoteButton.Click += (s, e) => ShowNotePanel(_notes.Count - 1);
-
-            // Добавляем кнопку в NotesPanel
-            NotesPanel.Children.Add(newNoteButton);
-
-            // Скрываем текст "Ваш список пуст..."
-            EmptyListText.IsVisible = false;
-
-            // Показываем панель редактирования для новой заметки
-            _currentNoteIndex = _notes.Count - 1;
-            ShowNotePanel(_currentNoteIndex);
+                var noteButton = new Button
+                {
+                    Width = 130,
+                    Height = 40,
+                    Content = note.Title,
+                    Background = new SolidColorBrush(Color.Parse("#D9D9D9")),
+                    Foreground = new SolidColorBrush(Color.Parse("#53422E")),
+                    Margin = new Thickness(10)
+                };
+                noteButton.Click += (s, e) => ShowNotePanel(_notes.IndexOf(note));
+                notesList.Children.Add(noteButton);
+            }
+            EmptyListText.IsVisible = _notes.Count == 0;
         }
 
         private void ShowNotePanel(int index)
         {
             if (index >= 0 && index < _notes.Count)
             {
-                // Показываем TextBox для редактирования заметки
                 NoteEditor.Text = _notes[index].Text;
+                _currentNoteIndex = index;
                 NotePanel.IsVisible = true;
-                EmptyListText.IsVisible = false;
-                CreateNote.IsVisible = false;
-            }
-            else
-            {
-                // Если индекс некорректен, скрываем редактор
-                NotePanel.IsVisible = false;
-                EmptyListText.IsVisible = true;
-            }
-        }
-
-        private void DeleteNote_OnClick(object? sender, RoutedEventArgs e)
-        {
-            if (_notes.Count > 0)
-            {
-                // Удаляем последнюю заметку
-                NotesPanel.Children.RemoveAt(NotesPanel.Children.Count - 1);
-                var noteToDelete = _notes[_notes.Count - 1];
-                _notes.RemoveAt(_notes.Count - 1);
-
-                // Удаляем файл заметки
-                var filePath = Path.Combine(NotesFolder, $"{noteToDelete.Title}.json");
-                if (File.Exists(filePath))
-                {
-                    File.Delete(filePath);
-                }
-
-                if (_notes.Count == 0)
-                {
-                    // Если заметок больше нет, показываем текст "Ваш список пуст..."
-                    EmptyListText.IsVisible = true;
-                    NotePanel.IsVisible = false;
-                    CreateNote.IsVisible = true;
-                }
-                else
-                {
-                    // Показываем предыдущую заметку
-                    _currentNoteIndex = _notes.Count - 1;
-                    ShowNotePanel(_currentNoteIndex);
-                }
             }
         }
 
         private void SaveNotesButton_OnClick(object? sender, RoutedEventArgs e)
         {
-            SaveNotes();
-        }
-
-        protected override void OnClosing(WindowClosingEventArgs e)
-        {
-            // Сохраняем текст заметок перед закрытием
-            SaveNotes();
-            base.OnClosing(e);
-        }
-
-        private void SaveNotes()
-        {
-            foreach (var note in _notes)
+            if (_currentNoteIndex >= 0 && _currentNoteIndex < _notes.Count)
             {
-                // Сохраняем каждую заметку в отдельный файл JSON
-                var filePath = Path.Combine(NotesFolder, $"{note.Title}.json");
-                var json = JsonSerializer.Serialize(note);
+                _notes[_currentNoteIndex].Text = NoteEditor.Text;
+                var filePath = Path.Combine(NotesFolder, $"{_notes[_currentNoteIndex].Title}.json");
+                var json = JsonSerializer.Serialize(_notes[_currentNoteIndex]);
                 File.WriteAllText(filePath, json);
             }
         }
 
+        private void DeleteNote_OnClick(object? sender, RoutedEventArgs e)
+        {
+            if (_currentNoteIndex >= 0 && _currentNoteIndex < _notes.Count)
+            {
+                _notes.RemoveAt(_currentNoteIndex);
+                NoteEditor.Text = string.Empty;
+                NotePanel.IsVisible = false;
+                UpdateNotesList();
+            }
+        }
+
+        private void CreateNote2_OnClick(object? sender, RoutedEventArgs e)
+        {
+            CreateNewNote();
+        }
+
         private void LoadNotes()
         {
-            // Загружаем заметки из файлов JSON
-            foreach (var filePath in Directory.GetFiles(NotesFolder, "*.json"))
+            if (Directory.Exists(NotesFolder))
             {
-                var json = File.ReadAllText(filePath);
-                var note = JsonSerializer.Deserialize<Note>(json);
-                if (note != null)
+                var files = Directory.GetFiles(NotesFolder, "*.json");
+                foreach (var file in files)
                 {
-                    _notes.Add(note);
-
-                    var noteButton = new Button
+                    var json = File.ReadAllText(file);
+                    var note = JsonSerializer.Deserialize<Note>(json);
+                    if (note != null)
                     {
-                        Width = 130,
-                        Height = 40,
-                        Content = note.Title,
-                        Background = new SolidColorBrush(Color.Parse("#D9D9D9")),
-                        Foreground = new SolidColorBrush(Color.Parse("#53422E")),
-                        Margin = new Thickness(10)
-                    };
-                    noteButton.Click += (s, e) => ShowNotePanel(_notes.IndexOf(note));
-                    NotesPanel.Children.Add(noteButton);
+                        _notes.Add(note);
+                    }
                 }
             }
         }
     }
 
-    // Класс для хранения данных заметки
     public class Note
     {
-        public string Title { get; set; } // Заголовок заметки
-        public string Text { get; set; } // Текст заметки
+        public string Title { get; set; }
+        public string Text { get; set; }
     }
 }
