@@ -5,28 +5,29 @@ using Avalonia.Media;
 using System.IO;
 using System.Text.Json;
 using Avalonia;
+
 namespace NoteApp.Views
 {
     public partial class MainWindow : Window
     {
-        private List<Note> _notes = new List<Note>(); // Список заметок
+        private List<Note> _notes = new List<Note>(); 
         private int _currentNoteIndex = -1;
-        private const string NotesFolder = "Notes"; // Папка для сохранения заметок
+        private const string NotesFolder = "Notes";
 
         public MainWindow()
         {
             InitializeComponent();
 
-            // Создаем папку для заметок, если её нет
+           
             if (!Directory.Exists(NotesFolder))
             {
                 Directory.CreateDirectory(NotesFolder);
             }
 
-            // Загружаем заметки из файлов
+            
             LoadNotes();
 
-            // Если есть заметки, показываем первую заметку
+           
             if (_notes.Count > 0)
             {
                 _currentNoteIndex = 0;
@@ -34,7 +35,7 @@ namespace NoteApp.Views
             }
             else
             {
-                // Если заметок нет, показываем текст "Ваш список пуст..."
+                
                 EmptyListText.IsVisible = true;
                 NotePanel.IsVisible = false;
             }
@@ -93,6 +94,7 @@ namespace NoteApp.Views
                 NoteEditor.Text = _notes[index].Text;
                 NotePanel.IsVisible = true;
                 EmptyListText.IsVisible = false;
+                CreateNote.IsVisible = false;
             }
             else
             {
@@ -123,6 +125,7 @@ namespace NoteApp.Views
                     // Если заметок больше нет, показываем текст "Ваш список пуст..."
                     EmptyListText.IsVisible = true;
                     NotePanel.IsVisible = false;
+                    CreateNote.IsVisible = true;
                 }
                 else
                 {
@@ -131,6 +134,11 @@ namespace NoteApp.Views
                     ShowNotePanel(_currentNoteIndex);
                 }
             }
+        }
+
+        private void SaveNotesButton_OnClick(object? sender, RoutedEventArgs e)
+        {
+            SaveNotes();
         }
 
         protected override void OnClosing(WindowClosingEventArgs e)
@@ -162,7 +170,6 @@ namespace NoteApp.Views
                 {
                     _notes.Add(note);
 
-                    
                     var noteButton = new Button
                     {
                         Width = 130,
