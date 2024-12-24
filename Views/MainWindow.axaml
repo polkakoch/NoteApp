@@ -7,17 +7,21 @@
         Background="#D0C5AD">
     <Canvas>
         <!-- Левая панель с заметками -->
-        <ScrollViewer VerticalScrollBarVisibility="Auto" Width="150" Background="#9C7A51" Canvas.Left="50" Canvas.Top="50">
-            <StackPanel Name="NotesPanel" />
-        </ScrollViewer>
+        <Border BorderBrush="#53422E" BorderThickness="2" CornerRadius="10" Canvas.Left="50" Canvas.Top="50" Width="150" Height="450">
+            <ScrollViewer VerticalScrollBarVisibility="Auto" Background="#9C7A51">
+                <StackPanel Name="NotesPanel" />
+            </ScrollViewer>
+        </Border>
 
         <!-- Центральная панель с текстом "Ваш список пуст..." -->
         <TextBlock Name="EmptyListText" Width="150" Height="50" FontSize="14" Foreground="#53422E" Margin="50,300,0,0" Text="Ваш список пуст..." IsVisible="True"/>
 
         <!-- Правая панель для редактирования заметки -->
-        <StackPanel Name="NotePanel" Width="500" Height="500" Background="#D9D9D9" Margin="250,50,0,0" IsVisible="False">
-            <TextBox Name="NoteEditor" Width="480" Height="480" FontSize="16" TextWrapping="Wrap" AcceptsReturn="True" Margin="10"/>
-        </StackPanel>
+        <Border BorderBrush="#53422E" BorderThickness="2" CornerRadius="10" Canvas.Left="250" Canvas.Top="50" Width="500" Height="500">
+            <StackPanel Name="NotePanel" Background="#D9D9D9" IsVisible="False">
+                <TextBox Name="NoteEditor" Width="480" Height="480" FontSize="16" TextWrapping="Wrap" AcceptsReturn="True" Margin="10"/>
+            </StackPanel>
+        </Border>
 
         <!-- Кнопки управления -->
         <Button Name="CreateNote" Width="250" IsVisible="true" Height="75" Background="#D9D9D9" Margin="400,275,0,0" Content="Создать" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="#53422E" Click="Button_OnClick"/>
