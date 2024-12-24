@@ -26,11 +26,13 @@ namespace NoteApp.Views
             UpdateNotesList();
         }
 
-        private void Button_OnClick(object? sender, RoutedEventArgs e)
+        // Создание новой заметки
+        private void CreateNote_OnClick(object? sender, RoutedEventArgs e)
         {
             CreateNewNote();
         }
 
+        // Создание новой заметки
         private void CreateNewNote()
         {
             var newNote = new Note { Title = $"Заметка {_notes.Count + 1}", Text = $"Это заметка {_notes.Count + 1}" };
@@ -43,6 +45,7 @@ namespace NoteApp.Views
             createNoteButton.IsVisible = false;
         }
 
+        // Обновление списка заметок
         private void UpdateNotesList()
         {
             var notesList = this.FindControl<StackPanel>("NotesPanel");
@@ -59,37 +62,33 @@ namespace NoteApp.Views
                     Margin = new Thickness(10)
                 };
 
-                // Обработчик одинарного клика
-                noteButton.Click += async (s, e) =>
-                {
-                    // Изменяем цвет на красный
-                    noteButton.Background = new SolidColorBrush(Color.Parse("Red"));
-
-                    // Ждем 300 мс, чтобы отличить одинарный клик от двойного
-                    await Task.Delay(300);
-                    noteButton.Background = new SolidColorBrush(Color.Parse("#D9D9D9"));
-                };
-
                 // Обработчик двойного клика
-                noteButton.DoubleTapped += async (s, e) =>
+                noteButton.DoubleTapped += (s, e) =>
                 {
-                    var newTitle = await ShowRenameDialog(note.Title);
-                    if (!string.IsNullOrEmpty(newTitle))
+                    // Переключение цвета
+                    if (noteButton.Background.Equals(new SolidColorBrush(Color.Parse("#FF0000"))))
                     {
-                        note.Title = newTitle;
-                        UpdateNotesList();
+                        noteButton.Background = new SolidColorBrush(Color.Parse("#D9D9D9")); // Меняем на стандартный
                     }
+                    else
+                    {
+                        noteButton.Background = new SolidColorBrush(Color.Parse("#FF0000")); // Меняем на красный
+                    }
+
+                    // Переход к заметке
+                    ShowNotePanel(_notes.IndexOf(note));
                 };
 
                 notesList.Children.Add(noteButton);
             }
             EmptyListText.IsVisible = _notes.Count == 0;
 
-            // Показываем кнопку CreateNote, если нет заметок
+            // Показываем кнопку "Создать" если нет заметок
             var createNoteButton = this.FindControl<Button>("CreateNote");
             createNoteButton.IsVisible = _notes.Count == 0;
         }
 
+        // Отображение панели для редактирования заметки
         private void ShowNotePanel(int index)
         {
             if (index >= 0 && index < _notes.Count)
@@ -98,23 +97,37 @@ namespace NoteApp.Views
                 _currentNoteIndex = index;
                 NotePanel.IsVisible = true;
 
-                // Скрываем кнопку CreateNote, если панель заметки видна
+                // Обновляем название заметки на первую строку текста
+                _notes[_currentNoteIndex].Title = GetFirstLine(NoteEditor.Text);
+
+                // Скрываем кнопку "Создать", когда панель заметки отображается
                 var createNoteButton = this.FindControl<Button>("CreateNote");
                 createNoteButton.IsVisible = false;
             }
         }
 
+        // Получаем первую строку текста
+        private string GetFirstLine(string text)
+        {
+            var lines = text.Split('\n');
+            return lines.Length > 0 ? lines[0] : "";
+        }
+
+        // Сохранение заметки
         private void SaveNotesButton_OnClick(object? sender, RoutedEventArgs e)
         {
             if (_currentNoteIndex >= 0 && _currentNoteIndex < _notes.Count)
             {
                 _notes[_currentNoteIndex].Text = NoteEditor.Text;
+                _notes[_currentNoteIndex].Title = GetFirstLine(NoteEditor.Text); // Обновляем название при сохранении
+
                 var filePath = Path.Combine(NotesFolder, $"{_notes[_currentNoteIndex].Title}.json");
                 var json = JsonSerializer.Serialize(_notes[_currentNoteIndex]);
                 File.WriteAllText(filePath, json);
             }
         }
 
+        // Удаление заметки
         private void DeleteNote_OnClick(object? sender, RoutedEventArgs e)
         {
             if (_currentNoteIndex >= 0 && _currentNoteIndex < _notes.Count)
@@ -140,11 +153,13 @@ namespace NoteApp.Views
             }
         }
 
+        // Слушатель для кнопки "Создать"
         private void CreateNote2_OnClick(object? sender, RoutedEventArgs e)
         {
             CreateNewNote();
         }
 
+        // Загрузка заметок из файлов
         private void LoadNotes()
         {
             if (Directory.Exists(NotesFolder))
@@ -160,31 +175,6 @@ namespace NoteApp.Views
                     }
                 }
             }
-        }
-
-        private async Task<string> ShowRenameDialog(string currentTitle)
-        {
-            var dialog = new TextBox
-            {
-                Width = 200,
-                Height = 50,
-                Text = currentTitle,
-                FontSize = 16,
-                VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center,
-                HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center
-            };
-
-            var window = new Window
-            {
-                Width = 300,
-                Height = 150,
-                Content = dialog,
-                Title = "Переименовать заметку",
-                WindowStartupLocation = WindowStartupLocation.CenterOwner
-            };
-
-            var result = await window.ShowDialog<string>(this);
-            return result ?? currentTitle;
         }
     }
 
