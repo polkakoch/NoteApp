@@ -24,9 +24,9 @@
         </Border>
 
         <!-- Кнопки управления -->
-        <Button Name="CreateNote" Width="250" IsVisible="true" Height="75" Background="#D9D9D9" Margin="400,275,0,0" Content="Создать" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="#53422E" Click="Button_OnClick"/>
+        <Button Name="CreateNote" Width="250" Height="75" Background="#D9D9D9" Margin="400,275,0,0" Content="Создать" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="#53422E" Click="CreateNote_OnClick"/>
         <Button Name="SaveNotesButton" Width="45" Height="45" Background="Green" Margin="25,550,0,0" Content="Save" Click="SaveNotesButton_OnClick"/>
-        <Button Name="DeleteNote" Click="DeleteNote_OnClick" Width="45" Height="45" Background="Red" Margin="100,550,0,0" Content="Delete"/>
-        <Button Name="CreateNote2" Width="200" Height="40" Background="Red" Margin="550,555,0,0" Click="CreateNote2_OnClick" Content="Create"/>
+        <Button Name="DeleteNote" Width="45" Height="45" Background="Red" Margin="100,550,0,0" Content="Delete" Click="DeleteNote_OnClick"/>
+        <Button Name="CreateNote2" Width="200" Height="40" Background="Red" Margin="550,555,0,0" Content="Create" Click="CreateNote2_OnClick"/>
     </Canvas>
 </Window>
