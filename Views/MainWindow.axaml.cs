@@ -5,6 +5,7 @@ using Avalonia.Media;
 using System.IO;
 using System.Text.Json;
 using Avalonia;
+using System.Threading.Tasks;
 
 namespace NoteApp.Views
 {
@@ -37,7 +38,7 @@ namespace NoteApp.Views
             UpdateNotesList();
             ShowNotePanel(_notes.Count - 1);
 
-            // P.S тут баг при повторном заходе не прячется кнопка
+            // Скрываем кнопку CreateNote
             var createNoteButton = this.FindControl<Button>("CreateNote");
             createNoteButton.IsVisible = false;
         }
@@ -57,10 +58,36 @@ namespace NoteApp.Views
                     Foreground = new SolidColorBrush(Color.Parse("#53422E")),
                     Margin = new Thickness(10)
                 };
-                noteButton.Click += (s, e) => ShowNotePanel(_notes.IndexOf(note));
+
+                // Обработчик одинарного клика
+                noteButton.Click += async (s, e) =>
+                {
+                    // Изменяем цвет на красный
+                    noteButton.Background = new SolidColorBrush(Color.Parse("Red"));
+
+                    // Ждем 300 мс, чтобы отличить одинарный клик от двойного
+                    await Task.Delay(300);
+                    noteButton.Background = new SolidColorBrush(Color.Parse("#D9D9D9"));
+                };
+
+                // Обработчик двойного клика
+                noteButton.DoubleTapped += async (s, e) =>
+                {
+                    var newTitle = await ShowRenameDialog(note.Title);
+                    if (!string.IsNullOrEmpty(newTitle))
+                    {
+                        note.Title = newTitle;
+                        UpdateNotesList();
+                    }
+                };
+
                 notesList.Children.Add(noteButton);
             }
             EmptyListText.IsVisible = _notes.Count == 0;
+
+            // Показываем кнопку CreateNote, если нет заметок
+            var createNoteButton = this.FindControl<Button>("CreateNote");
+            createNoteButton.IsVisible = _notes.Count == 0;
         }
 
         private void ShowNotePanel(int index)
@@ -70,6 +97,10 @@ namespace NoteApp.Views
                 NoteEditor.Text = _notes[index].Text;
                 _currentNoteIndex = index;
                 NotePanel.IsVisible = true;
+
+                // Скрываем кнопку CreateNote, если панель заметки видна
+                var createNoteButton = this.FindControl<Button>("CreateNote");
+                createNoteButton.IsVisible = false;
             }
         }
 
@@ -88,10 +119,24 @@ namespace NoteApp.Views
         {
             if (_currentNoteIndex >= 0 && _currentNoteIndex < _notes.Count)
             {
+                var noteToDelete = _notes[_currentNoteIndex];
+
                 _notes.RemoveAt(_currentNoteIndex);
+                
+                var filePath = Path.Combine(NotesFolder, $"{noteToDelete.Title}.json");
+                if (File.Exists(filePath))
+                {
+                    File.Delete(filePath);
+                }
+                
                 NoteEditor.Text = string.Empty;
                 NotePanel.IsVisible = false;
+                
                 UpdateNotesList();
+
+                // Показываем кнопку CreateNote, если нет заметок
+                var createNoteButton = this.FindControl<Button>("CreateNote");
+                createNoteButton.IsVisible = _notes.Count == 0;
             }
         }
 
@@ -115,6 +160,31 @@ namespace NoteApp.Views
                     }
                 }
             }
+        }
+
+        private async Task<string> ShowRenameDialog(string currentTitle)
+        {
+            var dialog = new TextBox
+            {
+                Width = 200,
+                Height = 50,
+                Text = currentTitle,
+                FontSize = 16,
+                VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center,
+                HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center
+            };
+
+            var window = new Window
+            {
+                Width = 300,
+                Height = 150,
+                Content = dialog,
+                Title = "Переименовать заметку",
+                WindowStartupLocation = WindowStartupLocation.CenterOwner
+            };
+
+            var result = await window.ShowDialog<string>(this);
+            return result ?? currentTitle;
         }
     }
 
